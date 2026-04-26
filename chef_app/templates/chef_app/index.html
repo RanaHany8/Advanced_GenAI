@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>AI Chef Assistant</title>
+    <style>
+        :root {
+            --primary: #ff5722;
+            --primary-dark: #e64a19;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+            color: #1a1a1a;
+        }
+
+        /* Modern Navbar */
+        .navbar {
+            background: var(--glass) !important;
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .navbar-brand { font-weight: 800; color: var(--primary) !important; letter-spacing: -0.5px; }
+
+        /* Floating Input Card */
+        .main-card {
+            border: none;
+            border-radius: 28px;
+            background: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+
+        .form-control {
+            border-radius: 14px;
+            border: 2px solid #f0f0f0;
+            padding: 14px;
+            font-size: 0.95rem;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.1);
+        }
+
+        /* High-Performance Button */
+        .btn-generate {
+            background: var(--primary);
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-weight: 700;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-generate:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 87, 34, 0.25);
+        }
+
+        /* Loading Overlay Styling */
+        #loader {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+            animation: fadeIn 0.4s ease;
+        }
+        .cooking-pot { font-size: 50px; animation: bounce 1s infinite; }
+
+        /* Recipe Card Styling */
+        .meal-card {
+            border: none;
+            border-radius: 24px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        .ingredient-tag {
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin: 4px;
+            display: inline-block;
+        }
+        .available { background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
+        .missing { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; }
+
+        .step-num {
+            width: 30px; height: 30px;
+            background: #fff0eb; color: var(--primary);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; margin-right: 15px;
+        }
+
+        /* Animations */
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar sticky-top py-3 mb-5">
+    <div class="container d-flex justify-content-center">
+        <span class="navbar-brand fs-4">👨‍🍳 SMART CHEF AI</span>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card main-card p-4 p-md-5">
+                <form method="POST" enctype="multipart/form-data" id="chefForm">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">ENTER INGREDIENTS</label>
+                        <textarea name="ingredients" class="form-control" rows="3" placeholder="e.g., Chicken, Mushrooms, Garlic..."></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">SNAP FRIDGE PHOTO</label>
+                        <input type="file" name="fridge_image" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-generate w-100" id="submitBtn">
+                        Create My Recipes 🪄
+                    </button>
+                </form>
+
+                <div id="loader">
+                    <div class="cooking-pot">🥘</div>
+                    <h5 class="fw-bold mt-3">The Chef is crafting your meal...</h5>
+                    <p class="text-muted small">Analyzing ingredients & balancing flavors</p>
+                    <div class="spinner-border text-primary mt-2" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if result %}
+    <div class="row g-4 mt-4 justify-content-center">
+        {% for meal in result.meals %}
+        <div class="col-lg-10">
+            <div class="card meal-card p-4 p-md-5">
+                <div class="d-flex flex-column flex-md-row justify-content-between mb-4">
+                    <div>
+                        <h2 class="fw-800 mb-1">{{ meal.meal_name }}</h2>
+                        <p class="text-muted small mb-0">👨‍👩‍👧‍👦 Serves {{ meal.number_of_individuals }} | ⏱ {{ meal.cooking_time }}</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold small text-muted mb-3">INGREDIENTS CHECK</h6>
+                    <div class="d-flex flex-wrap">
+                        {% for ing in meal.ingredients %}
+                        <div class="ingredient-tag {% if ing.status == 'available' %}available{% else %}missing{% endif %}">
+                            {% if ing.status == 'available' %}✓{% else %}+{% endif %} {{ ing.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold small text-muted mb-4">COOKING PROCESS</h6>
+                {% for step in meal.instructions %}
+                <div class="d-flex mb-3">
+                    <div class="step-num">{{ forloop.counter }}</div>
+                    <div class="pt-1" style="line-height: 1.6;">{{ step }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    const form = document.getElementById('chefForm');
+    const loader = document.getElementById('loader');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', function() {
+        // Hide the button and form fields visually to focus on loading
+        submitBtn.style.display = 'none';
+        document.querySelectorAll('.mb-4').forEach(el => el.style.opacity = '0.3');
+        
+        // Show the elegant loader
+        loader.style.display = 'block';
+        
+        // Scroll slightly to center the loader
+        window.scrollTo({ top: 100, behavior: 'smooth' });
+    });
+</script>
+
+</body>
+</html>
