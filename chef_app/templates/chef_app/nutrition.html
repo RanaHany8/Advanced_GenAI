@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition AI Expert</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2e7d32; 
+            --primary-dark: #1b5e20;
+            --bg-light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #e8f5e9, #f8fafc);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+            background: white;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-generate {
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            border: none;
+        }
+
+        .btn-generate:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .meal-card {
+            border: none;
+            border-radius: 30px;
+            background: white;
+            box-shadow: 0 20px 50px rgba(46, 125, 50, 0.1);
+        }
+
+        .calories-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 16px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar sticky-top py-3 mb-5">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="{% url 'chef_home' %}" class="btn btn-outline-secondary btn-sm">← Back to Chef</a>
+        <span class="navbar-brand fw-bold text-success">🥗 NUTRITION AI</span>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card main-card p-4">
+                <h4 class="fw-800 mb-4 text-center">Nutrition Analyzer</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">DESCRIBE YOUR MEAL</label>
+                        <textarea name="meal_desc" class="form-control" rows="3" placeholder="e.g., 200g Grilled salmon with broccoli..."></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">OR SNAP A PHOTO</label>
+                        <input type="file" name="meal_image" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-generate w-100">Analyze Nutrition 🍏</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if result %}
+    <div class="row mt-5 justify-content-center">
+        <div class="col-md-8">
+            <div class="card meal-card p-5">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <h2 class="fw-800 m-0">{{ result.meal_name }}</h2>
+                    <span class="badge bg-success rounded-pill px-3 py-2">Verified AI Analysis</span>
+                </div>
+                
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="calories-badge text-center">
+                            <h3 class="fw-800 mb-0">🔥 {{ result.calories }}</h3>
+                            <small class="text-uppercase fw-bold opacity-75">Calories</small>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="p-3 bg-light rounded-4 h-100">
+                            <p class="fw-bold mb-2">Detailed Macros:</p>
+                            <p class="text-muted mb-0">{{ result.macros }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6 class="fw-bold mb-2">Health Expert Summary:</h6>
+                    <p class="lead" style="font-size: 1.1rem;">{{ result.summary }}</p>
+                </div>
+
+                <div class="alert alert-warning mt-4 border-0 rounded-4 small">
+                    <strong>Disclaimer:</strong> This is not medical or dietary advice. Consult a qualified professional.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
