@@ -24,7 +24,7 @@ def chef_home(request):
         
     return render(request, "chef_app/index.html", {"result": result})
 
-
+#lab2
 from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
 from langchain_core.messages import HumanMessage
