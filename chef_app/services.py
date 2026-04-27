@@ -31,7 +31,6 @@ print("Schema Defined Successfully!")
 
 
 llm = init_chat_model(model="gpt-4o-mini", temperature=0.7)
-# llm = ChatOllama(model="llama3", format="json", temperature=0.7)
 
 chef_llm = llm.with_structured_output(ChefResponse)
 memory = InMemorySaver()
@@ -97,3 +96,58 @@ if __name__ == "__main__":
         for i, step in enumerate(meal.instructions, 1):
             print(f"   {i}. {step}")
         print("\n" + "-" * 50) 
+        
+        
+        
+        
+        #LAB2 
+import csv
+import base64
+import os  
+from dotenv import load_dotenv 
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.tools import tool
+from langgraph.prebuilt import create_react_agent
+from langgraph.checkpoint.memory import InMemorySaver
+from tavily import TavilyClient
+from pydantic import BaseModel, Field
+
+load_dotenv() 
+
+class NutritionAnalysis(BaseModel):
+    meal_name: str = Field(description="Name of the food")
+    calories: int = Field(description="Estimated calories")
+    macros: str = Field(description="Protein, Carbs, and Fats summary")
+    summary: str = Field(description="Brief nutritional summary")
+
+@tool
+def search_nutrition_info(query: str) -> str:
+    """Search for healthy restaurants, grocery stores, or detailed nutrition info."""
+    api_key = os.getenv("TAVILY_API_KEY") 
+    client = TavilyClient(api_key=api_key)
+    return str(client.search(query))
+
+@tool
+def store_nutrition_csv(meal_name: str, calories: int, summary: str):
+    """Store meal data into a CSV file for tracking."""
+    file_path = 'nutrition_log.csv'
+    with open(file_path, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([meal_name, calories, summary])
+    return f"Successfully saved {meal_name} to nutrition_log.csv"
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+memory = InMemorySaver()
+tools = [search_nutrition_info, store_nutrition_csv]
+
+nutrition_agent = create_react_agent(
+    model=llm,
+    tools=tools,
+    checkpointer=memory,
+    prompt="""You are a strict Nutrition Assistant. 
+    STRATEGY:
+    1. For ANY question about restaurants, locations, or menus, you MUST call 'search_nutrition_info' tool. DO NOT answer from your memory.
+    2. For ANY request to save or log data, you MUST call 'store_nutrition_csv'.
+    3. Always include the medical disclaimer: 'This is not medical or dietary advice.'"""
+)
