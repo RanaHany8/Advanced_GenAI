@@ -1,5 +1,5 @@
 from django.shortcuts import render
-# من السطر 2:
+
 from .services import get_chef_suggestions, nutrition_agent, NutritionAnalysis, llm
 from django.core.files.storage import FileSystemStorage
 
