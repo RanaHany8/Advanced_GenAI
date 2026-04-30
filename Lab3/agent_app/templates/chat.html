@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstateAI | Premium Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-header { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .chat-gradient { background: radial-gradient(circle at top right, #1e293b, #0f172a); }
+        .message-in { animation: fadeInScale 0.3s ease-out forwards; }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .bot-bubble { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .user-bubble { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="chat-gradient h-screen flex flex-col text-slate-200">
+
+    <!-- Premium Header -->
+    <header class="glass-header sticky top-0 z-50 p-5 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-house-chimney-window text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-semibold tracking-tight">EstateAI Assistant</h1>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span class="text-xs text-slate-400 font-medium">System Online</span>
+                </div>
+            </div>
+        </div>
+        <button class="text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-gear text-xl"></i>
+        </button>
+    </header>
+
+    <!-- Chat Workspace -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-6 max-w-5xl mx-auto w-full">
+        <!-- AI Welcome Message -->
+        <div class="flex justify-start message-in">
+            <div class="bot-bubble p-4 rounded-2xl rounded-tl-none max-w-[85%] shadow-xl">
+                <p class="text-sm leading-relaxed">
+                    Hello, **Rana**! I'm your premium Real Estate concierge. I can analyze legal documents, 
+                    check project availability in our database, or search for live market trends. 
+                    How can I assist your investment journey today?
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Futuristic Input Section -->
+    <footer class="p-6 bg-slate-900/50 backdrop-blur-md border-t border-white/5">
+        <form id="chat-form" class="max-w-4xl mx-auto relative group">
+            <input type="text" id="user-input" 
+                   class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-500"
+                   placeholder="Ask about properties, legal fees, or market news...">
+            <button type="submit" 
+                    class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-500 text-white px-5 rounded-xl transition-all flex items-center justify-center shadow-lg shadow-blue-600/20">
+                <i class="fa-solid fa-paper-plane-up"></i>
+            </button>
+        </form>
+        <p class="text-center text-[10px] text-slate-500 mt-4 tracking-widest uppercase">Powered by Gemini & LangChain</p>
+    </footer>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chatContainer = document.getElementById('chat-container');
+
+        function appendMessage(role, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} message-in`;
+            
+            const innerDiv = document.createElement('div');
+            innerDiv.className = role === 'user' 
+                ? 'user-bubble p-4 rounded-2xl rounded-tr-none shadow-lg max-w-[85%] text-white' 
+                : 'bot-bubble p-4 rounded-2xl rounded-tl-none shadow-xl max-w-[85%] text-slate-200';
+            
+            innerDiv.innerHTML = `<p class="text-sm leading-relaxed">${text}</p>`;
+            msgDiv.appendChild(innerDiv);
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            userInput.value = '';
+
+            // Premium Loading State
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'flex justify-start message-in';
+            loadingDiv.innerHTML = `
+                <div class="bot-bubble p-4 rounded-2xl rounded-tl-none flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+                    <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                    <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                    <span class="text-xs text-slate-400 ml-2">Analyzing market data...</span>
+                </div>`;
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch(`/agent/ask/?q=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                
+                loadingDiv.remove(); 
+                appendMessage('bot', data.answer);
+            } catch (error) {
+                loadingDiv.remove();
+                appendMessage('bot', '<span class="text-red-400">Error: Connection lost. Please check server status.</span>');
+            }
+        });
+    </script>
+</body>
+</html>
